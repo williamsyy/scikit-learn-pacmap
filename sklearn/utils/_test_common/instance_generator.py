@@ -129,6 +129,7 @@ from sklearn.manifold import (
     TSNE,
     Isomap,
     LocallyLinearEmbedding,
+    PaCMAP,
     SpectralEmbedding,
 )
 from sklearn.mixture import BayesianGaussianMixture, GaussianMixture
@@ -399,6 +400,7 @@ INIT_PARAMS = {
     OneVsRestClassifier: dict(estimator=LogisticRegression()),
     OrthogonalMatchingPursuitCV: dict(cv=3),
     OutputCodeClassifier: dict(estimator=LogisticRegression()),
+    PaCMAP: dict(num_iters=(10, 10, 20)),
     PassiveAggressiveClassifier: dict(max_iter=5),
     PassiveAggressiveRegressor: dict(max_iter=5),
     Perceptron: dict(max_iter=5),

@@ -10,6 +10,7 @@ from sklearn.manifold._locally_linear import (
     locally_linear_embedding,
 )
 from sklearn.manifold._mds import MDS, smacof
+from sklearn.manifold._pacmap import PaCMAP
 from sklearn.manifold._spectral_embedding import SpectralEmbedding, spectral_embedding
 from sklearn.manifold._t_sne import TSNE, trustworthiness
 
@@ -19,6 +20,7 @@ __all__ = [
     "ClassicalMDS",
     "Isomap",
     "LocallyLinearEmbedding",
+    "PaCMAP",
     "SpectralEmbedding",
     "locally_linear_embedding",
     "smacof",

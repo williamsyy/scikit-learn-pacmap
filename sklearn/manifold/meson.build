@@ -12,3 +12,11 @@ py.extension_module(
   subdir: 'sklearn/manifold',
   install: true
 )
+
+py.extension_module(
+  '_pacmap_utils',
+  cython_gen.process('_pacmap_utils.pyx'),
+  dependencies: [np_dep, openmp_dep],
+  subdir: 'sklearn/manifold',
+  install: true
+)

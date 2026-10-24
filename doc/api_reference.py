@@ -714,6 +714,7 @@ API_REFERENCE = {
                     "Isomap",
                     "LocallyLinearEmbedding",
                     "MDS",
+                    "PaCMAP",
                     "SpectralEmbedding",
                     "TSNE",
                     "locally_linear_embedding",

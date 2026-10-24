@@ -700,6 +700,67 @@ The disadvantages to using t-SNE are roughly:
   Belkina, A.C., Ciccolella, C.O., Anno, R., Halpert, R., Spidlen, J.,
   Snyder-Cappione, J.E., Nature Communications 10, 5415 (2019).
 
+.. _pacmap:
+
+Pairwise Controlled Manifold Approximation Projection (PaCMAP)
+==============================================================
+
+PaCMAP (:class:`PaCMAP`) optimizes a loss over three sets of sampled point
+pairs instead of a full affinity matrix:
+
+* **nearest-neighbor (NN) pairs**, the ``n_neighbors`` closest points of each
+  sample under a locally scaled distance, which preserve local structure;
+* **mid-near (MN) pairs**, for each slot the second closest of six random
+  samples, which preserve global structure;
+* **further (FP) pairs**, uniformly sampled non-neighbors, which keep
+  unrelated points apart.
+
+With :math:`\tilde d_{ij} = 1 + \|y_i - y_j\|^2`, the loss is
+
+.. math::
+
+    w_{NN} \sum_{NN} \frac{\tilde d_{ij}}{10 + \tilde d_{ij}}
+    + w_{MN} \sum_{MN} \frac{\tilde d_{ij}}{10^4 + \tilde d_{ij}}
+    + w_{FP} \sum_{FP} \frac{1}{1 + \tilde d_{ij}}
+
+and is minimized with Adam in three phases. In the first phase the mid-near
+weight decreases from 1000 to 3 so that the global layout forms first; in
+the last phase it is zero, and nearest-neighbor and further pairs refine the
+local structure.
+
+.. figure:: ../auto_examples/manifold/images/sphx_glr_plot_pacmap_vs_tsne_001.png
+   :target: ../auto_examples/manifold/plot_pacmap_vs_tsne.html
+   :align: center
+   :scale: 50
+
+Compared with :class:`TSNE`:
+
+* PaCMAP needs neither a perplexity calibration nor a Barnes-Hut tree, and
+  each iteration costs :math:`O(n \cdot (n_{NN} + n_{MN} + n_{FP}))`. It is
+  typically one to two orders of magnitude faster.
+* It tends to keep more of the arrangement of clusters, at the cost of
+  slightly lower trustworthiness; the difference is clearest on data with a
+  hierarchy of clusters.
+* It supports any number of output dimensions.
+* Like t-SNE, it only embeds the training data: there is no ``transform``.
+
+The nearest neighbors are found by an exact search, which costs
+:math:`O(n^2)` for high-dimensional data and dominates the run time beyond
+about :math:`10^5` samples. When ``n_features > 100``, the data are first
+projected onto their top 100 principal components (``apply_pca=True``).
+
+.. rubric:: Examples
+
+* :ref:`sphx_glr_auto_examples_manifold_plot_pacmap_vs_tsne.py`
+
+.. rubric:: References
+
+* `"Understanding How Dimension Reduction Tools Work: An Empirical Approach
+  to Deciphering t-SNE, UMAP, TriMap, and PaCMAP for Data Visualization"
+  <https://www.jmlr.org/papers/volume22/20-1061/20-1061.pdf>`_
+  Wang, Y., Huang, H., Rudin, C., Shaposhnik, Y. Journal of Machine Learning
+  Research 22(201):1-73, 2021.
+
 Tips on practical use
 =====================
 
