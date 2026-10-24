@@ -14,7 +14,11 @@ from sklearn.manifold._pacmap_utils import (
     _sample_fp_pairs,
 )
 from sklearn.model_selection import cross_val_score
-from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
+from sklearn.neighbors import (
+    KNeighborsClassifier,
+    KNeighborsTransformer,
+    NearestNeighbors,
+)
 from sklearn.utils._testing import assert_allclose, assert_array_equal
 
 FAST = dict(num_iters=(20, 20, 40))
@@ -400,3 +404,49 @@ def test_candidates_are_exact_neighbors():
 def test_invalid_input(params, X, err, match):
     with pytest.raises(err, match=match):
         PaCMAP(**params).fit(X)
+
+
+# neighbors_transformer
+
+
+@pytest.mark.parametrize("metric", ["euclidean", "manhattan"])
+def test_exact_transformer_reproduces_internal_search(metric):
+    X, _ = make_blobs(400, n_features=20, centers=5, random_state=0)
+    kw = dict(metric=metric, random_state=0, **FAST)
+    a = PaCMAP(**kw).fit(X)
+    t = KNeighborsTransformer(n_neighbors=61, mode="distance", metric=metric)
+    b = PaCMAP(neighbors_transformer=t, **kw).fit(X)
+    assert_array_equal(a.embedding_, b.embedding_)
+    assert not hasattr(t, "n_samples_fit_")  # the user's object is untouched
+
+
+def test_transformer_sees_preprocessed_data():
+    class Spy(KNeighborsTransformer):
+        def fit_transform(self, X, y=None):
+            self.seen_shape_ = X.shape
+            return super().fit_transform(X, y)
+
+    X, _ = make_blobs(300, n_features=150, random_state=0)
+    t = Spy(n_neighbors=61, mode="distance")
+    est = PaCMAP(neighbors_transformer=t, random_state=0, **FAST).fit(X)
+    assert est.neighbors_transformer_.seen_shape_ == (300, 100)
+
+
+def test_small_graph_warns_and_too_small_raises():
+    X = np.random.RandomState(0).rand(200, 5)
+    t = KNeighborsTransformer(n_neighbors=20, mode="distance")
+    with pytest.warns(UserWarning, match="candidates for the scaled re-ranking"):
+        PaCMAP(neighbors_transformer=t, random_state=0, **FAST).fit(X)
+    t = KNeighborsTransformer(n_neighbors=5, mode="distance")
+    with pytest.raises(ValueError, match="at least n_neighbors=10"):
+        PaCMAP(neighbors_transformer=t, **FAST).fit(X)
+
+
+def test_transformer_rejected_with_precomputed():
+    P = np.random.RandomState(0).rand(50, 3)
+    with pytest.raises(ValueError, match="cannot be used with metric"):
+        PaCMAP(
+            metric="precomputed",
+            init="random",
+            neighbors_transformer=KNeighborsTransformer(),
+        ).fit(cdist(P, P))
